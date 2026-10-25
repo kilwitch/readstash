@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('./partials/head') %>
+</head>
+<body>
+  <div class="bg-glow-wrapper">
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+  </div>
+
+  <%- include('./partials/nav') %>
+
+  <main class="container py-5 text-center my-auto">
+    <div class="py-5">
+      <div class="brand-icon mx-auto mb-4" style="width: 72px; height: 72px; font-size: 2rem;">
+        <i class="bi bi-question-lg"></i>
+      </div>
+      <h1 class="display-4 text-white font-serif mb-3">Page Not Found</h1>
+      <p class="text-secondary fs-5 mb-4" style="max-width: 500px; margin: 0 auto;">
+        <%= typeof message !== 'undefined' ? message : 'The page or book you are looking for does not exist or has been moved.' %>
+      </p>
+      <a href="/" class="btn-primary-glow">
+        <i class="bi bi-house-door"></i> Back to Bookshelf
+      </a>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container">
+      <p class="mb-0">ReadStash &copy; 2026. Your personal digital sanctuary for books and ideas.</p>
+    </div>
+  </footer>
+
+  <%- include('./partials/script') %>
+</body>
+</html>

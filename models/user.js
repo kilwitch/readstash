@@ -1,64 +1,76 @@
-const {Schema,model}=require('mongoose')
-const {randomBytes, createHmac}=require('crypto');
-const {createTokenForUser}=require('../services/authentication')
+const { Schema, model } = require('mongoose');
+const { randomBytes, createHmac } = require('crypto');
+const { createTokenForUser } = require('../services/authentication');
 
-const userSchema= new Schema({
-    fullName:{
-        type:String,
-        required:true,
+const userSchema = new Schema(
+    {
+        fullName: {
+            type: String,
+            required: [true, 'Full name is required'],
+            trim: true,
+        },
+        email: {
+            type: String,
+            required: [true, 'Email is required'],
+            unique: true,
+            lowercase: true,
+            trim: true,
+        },
+        salt: {
+            type: String,
+        },
+        password: {
+            type: String,
+            required: [true, 'Password is required'],
+        },
+        profileImageURL: {
+            type: String,
+            default: '/images/avatar.png',
+        },
+        role: {
+            type: String,
+            enum: ['USER', 'ADMIN'],
+            default: 'USER',
+        },
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-    },
-    salt:{
-        type:String,
-    },
-    password:{
-        type:String,
-        required:true,
-    },
-    profileImageURL:{
-        type:String,
-        default:'/images/avatar.png',
-    },
-    role:{
-        type:String,
-        enum:["USER", "ADMIN"],
-        default:"USER",
+    { timestamps: true }
+);
+
+userSchema.pre('save', function (next) {
+    const user = this;
+
+    if (!user.isModified('password')) {
+        return typeof next === 'function' ? next() : undefined;
     }
-},{timestamps: true});
 
-userSchema.pre("save", function(){
-    const user=this;
+    const salt = randomBytes(16).toString();
+    const hashedPassword = createHmac('sha256', salt).update(user.password).digest('hex');
 
-    if(!user.isModified('password')) return;
+    this.salt = salt;
+    this.password = hashedPassword;
 
-    const salt=randomBytes(16).toString();
-    const hashedPassword= createHmac('sha256', salt).update(user.password)
-    .digest("hex")
+    if (typeof next === 'function') next();
+});
 
-    this.salt= salt;
-    this.password= hashedPassword;
+// Static method to authenticate and generate JWT token
+userSchema.static('matchPasswordandGenerateToken', async function (email, password) {
+    if (!email || !password) {
+        throw new Error('Please enter both email and password.');
+    }
 
-})
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.findOne({ email: normalizedEmail });
+    if (!user) throw new Error('No account found with this email.');
 
-//virtual function
-userSchema.static("matchPasswordandGenerateToken", async function(email,password) {
-    const user= await this.findOne({email});
-    if(!user) throw new Error('User not found!')
+    const salt = user.salt;
+    const hashedPassword = user.password;
 
-    const salt= user.salt;
-    const hashedPassword=user.password;
+    const userProvidedHash = createHmac('sha256', salt).update(password).digest('hex');
+    if (hashedPassword !== userProvidedHash) throw new Error('Incorrect password. Please try again.');
 
-    const userProvidedHash=createHmac('sha256', salt).update(password)
-    .digest("hex");
-    if(hashedPassword !== userProvidedHash)  throw new Error('Incorrect Password');
+    const token = createTokenForUser(user);
+    return { token, user };
+});
 
-    const token=createTokenForUser(user);
-    return token;
-})
-
-const User=model("user", userSchema);
-module.exports=User;
+const User = model('user', userSchema);
+module.exports = User;

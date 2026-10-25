@@ -1,15 +1,463 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include('./partials/head') %> 
-    <title>Homepage</title>
+  <%- include('./partials/head') %>
 </head>
 <body>
-    <%- include('./partials/nav') %>
-    <div class="container ">
-        <h1>Hi </h1>
-    </div>
-    <%- include('./partials/script') %>
+  <div class="bg-glow-wrapper">
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+  </div>
 
+  <%- include('./partials/nav') %>
+
+  <% if (locals.user) { %>
+    <!-- ==========================================
+         AUTHENTICATED: PERSONAL BOOKSHELF DASHBOARD
+         ========================================== -->
+    <main class="container py-4 my-2">
+      <!-- Welcome Header & Quick Action -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <span class="badge mb-2" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber-light); border: 1px solid rgba(245, 158, 11, 0.3);">
+            Personal Library
+          </span>
+          <h1 class="display-6 font-serif fw-bold text-white mb-1">
+            <%= (typeof welcome !== 'undefined' && welcome) ? 'Welcome to ReadStash, ' : 'Welcome back, ' %>
+            <span class="hero-title-accent"><%= locals.user.fullName || 'Reader' %></span>
+          </h1>
+          <p class="text-secondary small mb-0">Track your progress, record memorable quotes, and revisit your favorite books.</p>
+        </div>
+
+        <div>
+          <a href="/books/add" class="btn-primary-glow">
+            <i class="bi bi-plus-lg"></i> Add New Book
+          </a>
+        </div>
+      </div>
+
+      <!-- Reading Stats Row -->
+      <section class="stats-container">
+        <div class="stat-card">
+          <div class="stat-icon total">
+            <i class="bi bi-bookshelf"></i>
+          </div>
+          <div>
+            <div class="stat-value"><%= (typeof stats !== 'undefined' && stats.total) ? stats.total : 0 %></div>
+            <div class="stat-label">Total in Stash</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon reading">
+            <i class="bi bi-book-half"></i>
+          </div>
+          <div>
+            <div class="stat-value"><%= (typeof stats !== 'undefined' && stats.reading) ? stats.reading : 0 %></div>
+            <div class="stat-label">Currently Reading</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon want">
+            <i class="bi bi-bookmark-plus"></i>
+          </div>
+          <div>
+            <div class="stat-value"><%= (typeof stats !== 'undefined' && stats.wantToRead) ? stats.wantToRead : 0 %></div>
+            <div class="stat-label">Want to Read</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon read">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+          <div>
+            <div class="stat-value"><%= (typeof stats !== 'undefined' && stats.read) ? stats.read : 0 %></div>
+            <div class="stat-label">Finished / Read</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filter, Search & Sort Toolbar -->
+      <section class="shelf-controls">
+        <!-- Filter Tabs -->
+        <div class="filter-pills">
+          <a href="/?filter=all<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %><%= sortBy ? '&sort=' + sortBy : '' %>" 
+             class="filter-pill <%= activeFilter === 'all' ? 'active' : '' %>">
+            <i class="bi bi-grid-fill"></i> All Books (<%= (typeof stats !== 'undefined' && stats.total) ? stats.total : 0 %>)
+          </a>
+          <a href="/?filter=reading<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %><%= sortBy ? '&sort=' + sortBy : '' %>" 
+             class="filter-pill <%= activeFilter === 'reading' ? 'active' : '' %>">
+            <i class="bi bi-book"></i> Reading (<%= (typeof stats !== 'undefined' && stats.reading) ? stats.reading : 0 %>)
+          </a>
+          <a href="/?filter=wantToRead<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %><%= sortBy ? '&sort=' + sortBy : '' %>" 
+             class="filter-pill <%= activeFilter === 'wantToRead' ? 'active' : '' %>">
+            <i class="bi bi-bookmark"></i> Want to Read (<%= (typeof stats !== 'undefined' && stats.wantToRead) ? stats.wantToRead : 0 %>)
+          </a>
+          <a href="/?filter=read<%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %><%= sortBy ? '&sort=' + sortBy : '' %>" 
+             class="filter-pill <%= activeFilter === 'read' ? 'active' : '' %>">
+            <i class="bi bi-check-circle"></i> Finished (<%= (typeof stats !== 'undefined' && stats.read) ? stats.read : 0 %>)
+          </a>
+        </div>
+
+        <!-- Search Bar and Sort -->
+        <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-md-end flex-wrap">
+          <form action="/" method="GET" class="search-box-wrapper">
+            <% if (activeFilter !== 'all') { %>
+              <input type="hidden" name="filter" value="<%= activeFilter %>">
+            <% } %>
+            <% if (sortBy && sortBy !== 'newest') { %>
+              <input type="hidden" name="sort" value="<%= sortBy %>">
+            <% } %>
+            <div class="search-input-group">
+              <i class="bi bi-search search-icon"></i>
+              <input 
+                type="text" 
+                name="q" 
+                class="search-input" 
+                placeholder="Search title, author, genre..." 
+                value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+              >
+            </div>
+            <% if (searchQuery) { %>
+              <a href="/?filter=<%= activeFilter %>" class="btn btn-sm btn-outline-secondary" title="Clear search">
+                <i class="bi bi-x"></i>
+              </a>
+            <% } %>
+          </form>
+
+          <!-- Sort dropdown -->
+          <form action="/" method="GET" class="d-inline">
+            <% if (activeFilter !== 'all') { %>
+              <input type="hidden" name="filter" value="<%= activeFilter %>">
+            <% } %>
+            <% if (searchQuery) { %>
+              <input type="hidden" name="q" value="<%= searchQuery %>">
+            <% } %>
+            <select name="sort" class="form-select-custom py-1 px-2" style="font-size: 0.85rem; width: auto;" onchange="this.form.submit()">
+              <option value="newest" <%= sortBy === 'newest' ? 'selected' : '' %>>Newest First</option>
+              <option value="oldest" <%= sortBy === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+              <option value="rating" <%= sortBy === 'rating' ? 'selected' : '' %>>Highest Rated</option>
+              <option value="title" <%= sortBy === 'title' ? 'selected' : '' %>>Title (A-Z)</option>
+            </select>
+          </form>
+        </div>
+      </section>
+
+      <!-- Books Grid / Empty State -->
+      <% if (!books || books.length === 0) { %>
+        <div class="empty-shelf-state">
+          <div class="empty-icon">
+            <i class="bi bi-journal-bookmark"></i>
+          </div>
+          <% if (searchQuery || activeFilter !== 'all') { %>
+            <h3 class="font-serif text-white mb-2">No matching books found</h3>
+            <p class="text-secondary mb-3">No books on your shelf matched "<%= searchQuery || activeFilter %>".</p>
+            <a href="/" class="btn-secondary-glass">
+              <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+            </a>
+          <% } else { %>
+            <h3 class="font-serif text-white mb-2">Your bookshelf is empty</h3>
+            <p class="text-secondary mb-4" style="max-width: 440px; margin: 0 auto;">
+              Start saving the books you love, track your current reads, and jot down memorable highlights anytime.
+            </p>
+            <a href="/books/add" class="btn-primary-glow">
+              <i class="bi bi-plus-circle"></i> Add Your First Book
+            </a>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="books-grid">
+          <% books.forEach(function(book) { %>
+            <div class="book-card">
+              <!-- Cover image wrapper -->
+              <div class="book-card-cover-wrapper">
+                <a href="/books/<%= book._id %>" class="w-100 h-100 d-block">
+                  <img 
+                    src="<%= book.coverImageURL || '/images/book.png' %>" 
+                    alt="<%= book.title %>"
+                    loading="lazy"
+                    onerror="this.src='/images/book.png';"
+                  >
+                </a>
+
+                <!-- Status Badge Overlay -->
+                <% if (book.status === 'reading') { %>
+                  <span class="book-status-badge badge-reading">
+                    <i class="bi bi-book-half"></i> Reading
+                  </span>
+                <% } else if (book.status === 'wantToRead') { %>
+                  <span class="book-status-badge badge-wantToRead">
+                    <i class="bi bi-bookmark-fill"></i> Want to Read
+                  </span>
+                <% } else if (book.status === 'read') { %>
+                  <span class="book-status-badge badge-read">
+                    <i class="bi bi-check2-circle"></i> Finished
+                  </span>
+                <% } %>
+              </div>
+
+              <!-- Card Body -->
+              <div class="book-card-body">
+                <div class="book-genre-tag"><%= book.genre || 'General' %></div>
+                <h3 class="book-card-title">
+                  <a href="/books/<%= book._id %>" class="text-white text-decoration-none">
+                    <%= book.title %>
+                  </a>
+                </h3>
+                <div class="book-card-author"><%= book.author %></div>
+
+                <!-- Star Rating -->
+                <div class="star-rating-display">
+                  <% for(let i = 1; i <= 5; i++) { %>
+                    <i class="bi <%= i <= (book.rating || 0) ? 'bi-star-fill' : 'bi-star star-empty' %>"></i>
+                  <% } %>
+                  <% if (book.rating > 0) { %>
+                    <span class="text-muted small ms-1">(<%= book.rating %>/5)</span>
+                  <% } %>
+                </div>
+
+                <!-- Reading Progress (if applicable) -->
+                <% if (book.totalPages > 0) { 
+                     const p = Math.min(100, Math.round(((book.currentPage || 0) / book.totalPages) * 100));
+                %>
+                  <div class="book-progress-wrapper">
+                    <div class="d-flex justify-content-between text-muted small mb-1" style="font-size: 0.75rem;">
+                      <span><%= book.currentPage || 0 %> / <%= book.totalPages %> pages</span>
+                      <span class="fw-semibold text-white"><%= p %>%</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill" style="width: <%= p %>%;"></div>
+                    </div>
+                  </div>
+                <% } %>
+
+                <!-- Notes / Quote Preview -->
+                <% if (book.favoriteQuote) { %>
+                  <div class="book-notes-preview">
+                    &ldquo;<%= book.favoriteQuote %>&rdquo;
+                  </div>
+                <% } else if (book.notes) { %>
+                  <div class="book-notes-preview">
+                    <%= book.notes %>
+                  </div>
+                <% } %>
+
+                <!-- Card Footer Actions -->
+                <div class="book-card-footer">
+                  <!-- Quick status dropdown -->
+                  <form action="/books/status/<%= book._id %>" method="POST" class="d-inline">
+                    <select name="status" class="form-select-custom py-1 px-2" style="font-size: 0.78rem; width: auto;" onchange="this.form.submit()">
+                      <option value="wantToRead" <%= book.status === 'wantToRead' ? 'selected' : '' %>>Want to Read</option>
+                      <option value="reading" <%= book.status === 'reading' ? 'selected' : '' %>>Reading</option>
+                      <option value="read" <%= book.status === 'read' ? 'selected' : '' %>>Finished</option>
+                    </select>
+                  </form>
+
+                  <div class="d-flex align-items-center gap-2">
+                    <a href="/books/edit/<%= book._id %>" class="btn btn-sm btn-outline-secondary p-1 px-2" title="Edit book">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="/books/<%= book._id %>" class="btn btn-sm btn-outline-warning p-1 px-2" title="View details">
+                      <i class="bi bi-arrow-right"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </main>
+
+  <% } else { %>
+    <!-- ==========================================
+         VISITOR / LANDING PAGE FOR READSTASH
+         ========================================== -->
+    <main class="container">
+      <div class="hero-wrapper">
+        <div class="hero-pill">
+          <i class="bi bi-stars"></i> Curate Your Reading Sanctuary
+        </div>
+        <h1 class="hero-title">
+          Your Personal <br>
+          <span class="hero-title-accent">Digital Bookshelf</span>
+        </h1>
+        <p class="hero-subtitle">
+          ReadStash is your personal digital bookshelf — a simple app to save, manage, and revisit your favorite books anytime.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="/user/signup" class="btn-primary-glow">
+            <i class="bi bi-bookmark-star-fill"></i> Get Started Free
+          </a>
+          <a href="/user/signin" class="btn-secondary-glass">
+            <i class="bi bi-box-arrow-in-right"></i> Sign In to Bookshelf
+          </a>
+        </div>
+      </div>
+
+      <!-- Live Feature Showcase Grid -->
+      <section class="row g-4 mb-5 pb-4">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon-box">
+              <i class="bi bi-collection"></i>
+            </div>
+            <h4 class="text-white font-serif mb-2">Save & Organize</h4>
+            <p class="text-secondary small mb-0">
+              Easily catalog every title in your library with custom covers, genres, and page trackers. Keep your physical and digital stash in one peaceful spot.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon-box" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border-color: rgba(99, 102, 241, 0.25);">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h4 class="text-white font-serif mb-2">Track Reading Flow</h4>
+            <p class="text-secondary small mb-0">
+              Categorize titles smoothly between <em>Want to Read</em>, <em>Currently Reading</em>, and <em>Finished</em>. Follow page-by-page progress with real-time stats.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon-box" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.25);">
+              <i class="bi bi-quote"></i>
+            </div>
+            <h4 class="text-white font-serif mb-2">Capture Notes & Quotes</h4>
+            <p class="text-secondary small mb-0">
+              Never forget an eye-opening passage or summary. Attach personalized takeaways and unforgettable quotes to any book in your collection.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visual Sample Shelf Preview -->
+      <section class="p-4 p-md-5 rounded-4 mb-5" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+        <div class="text-center mb-4">
+          <span class="badge mb-2" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber-light); border: 1px solid rgba(245, 158, 11, 0.3);">
+            Interactive Experience
+          </span>
+          <h2 class="text-white font-serif">A Glimpse Inside ReadStash</h2>
+          <p class="text-secondary small" style="max-width: 500px; margin: 0 auto;">
+            Designed for readers who appreciate clarity, speed, and elegance without intrusive clutter.
+          </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+          <!-- Demo Book 1 -->
+          <div class="col-md-4">
+            <div class="book-card">
+              <div class="book-card-cover-wrapper" style="background: linear-gradient(135deg, #312e81, #1e1b4b);">
+                <div class="p-4 text-center text-white">
+                  <i class="bi bi-lightning-charge fs-1 text-warning mb-2 d-block"></i>
+                  <div class="fw-bold font-serif fs-5">Atomic Habits</div>
+                  <div class="small opacity-75">James Clear</div>
+                </div>
+                <span class="book-status-badge badge-reading">
+                  <i class="bi bi-book-half"></i> Reading
+                </span>
+              </div>
+              <div class="book-card-body">
+                <div class="book-genre-tag">Productivity</div>
+                <h4 class="book-card-title text-white">Atomic Habits</h4>
+                <div class="book-card-author">James Clear</div>
+                <div class="star-rating-display mb-2">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                </div>
+                <div class="book-notes-preview">
+                  &ldquo;You do not rise to the level of your goals. You fall to the level of your systems.&rdquo;
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo Book 2 -->
+          <div class="col-md-4">
+            <div class="book-card">
+              <div class="book-card-cover-wrapper" style="background: linear-gradient(135deg, #064e3b, #022c22);">
+                <div class="p-4 text-center text-white">
+                  <i class="bi bi-shield-check fs-1 text-success mb-2 d-block"></i>
+                  <div class="fw-bold font-serif fs-5">Meditations</div>
+                  <div class="small opacity-75">Marcus Aurelius</div>
+                </div>
+                <span class="book-status-badge badge-read">
+                  <i class="bi bi-check2-circle"></i> Finished
+                </span>
+              </div>
+              <div class="book-card-body">
+                <div class="book-genre-tag">Philosophy</div>
+                <h4 class="book-card-title text-white">Meditations</h4>
+                <div class="book-card-author">Marcus Aurelius</div>
+                <div class="star-rating-display mb-2">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                </div>
+                <div class="book-notes-preview">
+                  &ldquo;The soul becomes dyed with the color of its thoughts.&rdquo;
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo Book 3 -->
+          <div class="col-md-4">
+            <div class="book-card">
+              <div class="book-card-cover-wrapper" style="background: linear-gradient(135deg, #701a75, #4a044e);">
+                <div class="p-4 text-center text-white">
+                  <i class="bi bi-compass fs-1 text-info mb-2 d-block"></i>
+                  <div class="fw-bold font-serif fs-5">Klara and the Sun</div>
+                  <div class="small opacity-75">Kazuo Ishiguro</div>
+                </div>
+                <span class="book-status-badge badge-wantToRead">
+                  <i class="bi bi-bookmark-fill"></i> Want to Read
+                </span>
+              </div>
+              <div class="book-card-body">
+                <div class="book-genre-tag">Literary Sci-Fi</div>
+                <h4 class="book-card-title text-white">Klara and the Sun</h4>
+                <div class="book-card-author">Kazuo Ishiguro</div>
+                <div class="star-rating-display mb-2">
+                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star star-empty"></i>
+                </div>
+                <div class="book-notes-preview">
+                  Next on the reading list for modern contemplative fiction.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-5">
+          <a href="/user/signup" class="btn-primary-glow px-4 py-2">
+            Build Your Own Bookshelf Now <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </section>
+    </main>
+  <% } %>
+
+  <footer class="app-footer">
+    <div class="container">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <div class="brand-icon" style="width: 28px; height: 28px; font-size: 0.9rem;">
+            <i class="bi bi-book-half"></i>
+          </div>
+          <span class="text-white fw-bold font-serif">ReadStash</span>
+          <span class="text-muted small">&mdash; Your Personal Digital Bookshelf</span>
+        </div>
+        <div class="text-muted small">
+          Crafted with care &bull; JWT Authentication &bull; Express & Mongoose
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <%- include('./partials/script') %>
 </body>
 </html>

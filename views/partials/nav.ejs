@@ -1,27 +1,66 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Bookify</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Add Book</a>
-        </li>
-        
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Wahid
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="/user/logout">Logout</a></li> 
+<nav class="app-navbar">
+  <div class="container nav-container">
+    <!-- Brand Logo -->
+    <a class="brand-logo" href="/">
+      <div class="brand-icon">
+        <i class="bi bi-book-half"></i>
+      </div>
+      <span>ReadStash</span>
+      <span class="brand-badge">BETA</span>
+    </a>
+
+    <!-- Right Side Nav Actions -->
+    <div class="d-flex align-items-center gap-3">
+      <% if (locals.user) { %>
+        <!-- Add Book Button -->
+        <a href="/books/add" class="btn-add-stash d-flex align-items-center gap-2">
+          <i class="bi bi-plus-lg"></i>
+          <span class="d-none d-sm-inline">Add Book</span>
+        </a>
+
+        <!-- User Dropdown Menu -->
+        <div class="dropdown">
+          <button class="user-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img 
+              src="<%= locals.user.profileImageURL || '/images/avatar.png' %>" 
+              alt="<%= locals.user.fullName || 'User' %>" 
+              class="user-avatar-mini"
+              onerror="this.src='/images/avatar.png';"
+            >
+            <span class="d-none d-md-inline pe-1"><%= locals.user.fullName || locals.user.email.split('@')[0] %></span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark-custom">
+            <li class="px-3 py-2 border-bottom" style="border-color: var(--border-color) !important;">
+              <div class="small text-muted">Signed in as</div>
+              <div class="fw-bold text-white text-truncate"><%= locals.user.email %></div>
+            </li>
+            <li>
+              <a class="dropdown-item-custom" href="/">
+                <i class="bi bi-collection"></i> My Bookshelf
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item-custom" href="/books/add">
+                <i class="bi bi-plus-circle"></i> Add New Book
+              </a>
+            </li>
+            <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
+            <li>
+              <a class="dropdown-item-custom dropdown-item-danger" href="/user/logout">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+              </a>
+            </li>
           </ul>
-        </li>
-      </ul>
+        </div>
+      <% } else { %>
+        <!-- Guest Actions -->
+        <a href="/user/signin" class="nav-link-custom">
+          Sign In
+        </a>
+        <a href="/user/signup" class="btn-primary-glow" style="padding: 0.5rem 1.15rem; font-size: 0.9rem;">
+          Get Started
+        </a>
+      <% } %>
     </div>
   </div>
 </nav>

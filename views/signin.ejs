@@ -1,34 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include('./partials/head') %> 
-    <title>SignIn</title>
+  <%- include('./partials/head') %>
 </head>
 <body>
-    <%- include('./partials/nav') %>
+  <div class="bg-glow-wrapper">
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+  </div>
 
-    <div class="container mt-4">
-        <form action="/user/signin" method="post">
-           
-  <div class="mb-3">
-    <label for="exampleInputEmail1" class="form-label">Email address</label>
-    <input type="email" class="form-control" id="exampleInputEmail1" 
-    name="email"
-    aria-describedby="emailHelp">
-    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-  </div>
-  <div class="mb-3">
-    <label for="exampleInputPassword1" class="form-label">Password</label>
-    <input type="password" 
-    name="password"
-    class="form-control" id="exampleInputPassword1">
-  </div>
-  
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+  <%- include('./partials/nav') %>
+
+  <main class="auth-page-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand-icon mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.4rem;">
+          <i class="bi bi-book-half"></i>
+        </div>
+        <h2>Welcome Back</h2>
+        <p>Sign in to access your personal reading shelf</p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert-custom alert-danger-custom">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <div><%= error %></div>
+        </div>
+      <% } %>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert-custom alert-success-custom">
+          <i class="bi bi-check-circle-fill"></i>
+          <div><%= message %></div>
+        </div>
+      <% } %>
+
+      <form action="/user/signin" method="POST">
+        <div class="mb-3">
+          <label for="emailInput" class="form-label-custom">Email Address</label>
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-secondary text-secondary" style="border-color: var(--border-color) !important;">
+              <i class="bi bi-envelope"></i>
+            </span>
+            <input 
+              type="email" 
+              name="email" 
+              id="emailInput" 
+              class="form-control-custom" 
+              placeholder="name@example.com" 
+              value="<%= typeof email !== 'undefined' ? email : '' %>"
+              required 
+              autofocus
+            >
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label for="passwordInput" class="form-label-custom mb-0">Password</label>
+          </div>
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-secondary text-secondary" style="border-color: var(--border-color) !important;">
+              <i class="bi bi-lock"></i>
+            </span>
+            <input 
+              type="password" 
+              name="password" 
+              id="passwordInput" 
+              class="form-control-custom" 
+              placeholder="••••••••" 
+              required
+            >
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary-glow w-100 justify-content-center py-2 mb-3">
+          <i class="bi bi-box-arrow-in-right"></i> Sign In to Bookshelf
+        </button>
+      </form>
+
+      <div class="text-center mt-3 pt-3 border-top" style="border-color: var(--border-color) !important;">
+        <span class="text-muted small">New to ReadStash?</span>
+        <a href="/user/signup" class="ms-1 fw-semibold">Create an account</a>
+      </div>
     </div>
+  </main>
 
-    <%- include('./partials/script') %>
+  <footer class="app-footer">
+    <div class="container">
+      <p class="mb-0">ReadStash &copy; 2026. Your personal digital sanctuary for books and ideas.</p>
+    </div>
+  </footer>
 
+  <%- include('./partials/script') %>
 </body>
 </html>
